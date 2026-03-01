@@ -78,6 +78,17 @@ function RadioCards({ options, value, setValue }) {
     )
 }
 
+// ===== Section wrapper =====
+const Section = ({ title, subtitle, children, fullWidth }) => (
+    <div className={`glass-card p-8 h-full flex flex-col ${fullWidth ? 'col-span-full' : ''}`}>
+        <div className="mb-7 pb-[18px] border-b border-white/8">
+            <div className="text-[1.1rem] font-bold">{title}</div>
+            <div className="text-[0.8rem] text-gray-500 mt-0.5">{subtitle}</div>
+        </div>
+        <div className="flex-1">{children}</div>
+    </div>
+)
+
 // ===== Main Profile Page =====
 
 const STEPS = [
@@ -219,16 +230,6 @@ export default function ProfilePage() {
         setUploadedFile(file)
     }
 
-    // ===== Section wrapper =====
-    const Section = ({ title, subtitle, children, fullWidth }) => (
-        <div className={`glass-card p-8 h-full flex flex-col ${fullWidth ? 'col-span-full' : ''}`}>
-            <div className="mb-7 pb-[18px] border-b border-white/8">
-                <div className="text-[1.1rem] font-bold">{title}</div>
-                <div className="text-[0.8rem] text-gray-500 mt-0.5">{subtitle}</div>
-            </div>
-            <div className="flex-1">{children}</div>
-        </div>
-    )
 
     return (
         <div className="min-h-screen flex flex-col">

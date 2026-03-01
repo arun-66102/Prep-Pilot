@@ -139,6 +139,11 @@ a {
     box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.12);
 }
 
+.form-select option {
+    background-color: var(--color-dark-900);
+    color: #ffffff;
+}
+
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
     width: 8px;
