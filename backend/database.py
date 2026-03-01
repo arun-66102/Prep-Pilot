@@ -22,7 +22,8 @@ async def init_db():
         min_size=2,
         max_size=10,
         command_timeout=60,
-        statement_cache_size=0  # Prevents InvalidCachedStatementError on schema changes
+        statement_cache_size=0,  # Prevents InvalidCachedStatementError on schema changes
+        max_inactive_connection_lifetime=300 # Drops connections that have been idle too long (for Neon)
     )
 
     # Create tables
@@ -85,6 +86,33 @@ async def init_db():
 
                 created_at TIMESTAMP DEFAULT NOW(),
                 updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS plans (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                plan_json JSONB NOT NULL,
+                completed_tasks JSONB DEFAULT '{}'::jsonb,
+                quiz_score INTEGER,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+
+        # Safely migrate existing table
+        try:
+            await conn.execute("ALTER TABLE plans ADD COLUMN completed_tasks JSONB DEFAULT '{}'::jsonb;")
+        except asyncpg.exceptions.DuplicateColumnError:
+            pass
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS interviews (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                questions_json JSONB NOT NULL,
+                target_role VARCHAR(200),
+                created_at TIMESTAMP DEFAULT NOW()
             );
         """)
 

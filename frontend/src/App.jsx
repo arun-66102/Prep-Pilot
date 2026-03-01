@@ -1,8 +1,12 @@
 import { Toaster } from 'react-hot-toast'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import AuthPage from './pages/AuthPage'
+import InterviewPage from './pages/InterviewPage'
 import LandingPage from './pages/LandingPage'
+import PlanPage from './pages/PlanPage'
 import ProfilePage from './pages/ProfilePage'
+import QuizPage from './pages/QuizPage'
+import ReportPage from './pages/ReportPage'
 import { getToken } from './services/api'
 
 function ProtectedRoute({ children }) {
@@ -40,6 +44,10 @@ export default function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/auth" element={<GuestRoute><AuthPage /></GuestRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/quiz" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+                <Route path="/plan" element={<ProtectedRoute><PlanPage /></ProtectedRoute>} />
+                <Route path="/interview" element={<ProtectedRoute><InterviewPage /></ProtectedRoute>} />
+                <Route path="/report" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>

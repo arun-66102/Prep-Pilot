@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Link, useNavigate } from 'react-router-dom'
-import { getProfile, getUser, logout, updateProfile, uploadResume } from '../services/api'
+import { getLatestPlan, getProfile, getUser, logout, updateProfile, uploadResume } from '../services/api'
 
 // ===== Sub-Components =====
 
@@ -31,7 +31,7 @@ function TagInput({ tags, setTags, placeholder, color = 'neon-blue' }) {
                 {tags.map((tag, i) => (
                     <span key={i} className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[0.82rem] font-medium ${c.bg} border ${c.border} ${c.text}`}>
                         {tag}
-                        <button type="button" onClick={() => setTags(tags.filter((_, j) => j !== i))} className="opacity-70 hover:opacity-100 text-base leading-none">×</button>
+                        <button type="button" onClick={() => setTags(tags.filter((_, j) => j !== i))} className="opacity-70 hover:opacity-100 text-base leading-none">&times;</button>
                     </span>
                 ))}
                 <input className="flex-1 min-w-[140px] border-none bg-transparent text-white font-sans text-sm outline-none py-1 placeholder:text-gray-600" placeholder={placeholder} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey} />
@@ -70,7 +70,6 @@ function RadioCards({ options, value, setValue }) {
                 <button key={opt.value} type="button" onClick={() => setValue(opt.value)}
                     className={`p-3.5 px-4 rounded-xl text-center select-none transition-all border
             ${value === opt.value ? 'bg-neon-blue/10 border-neon-blue/35' : 'bg-white/4 border-white/8 hover:bg-white/8'}`}>
-                    <div className="text-xl mb-1.5">{opt.emoji}</div>
                     <div className="text-[0.82rem] font-semibold text-white">{opt.label}</div>
                     {opt.desc && <div className="text-[0.72rem] text-gray-500 mt-0.5">{opt.desc}</div>}
                 </button>
@@ -82,12 +81,12 @@ function RadioCards({ options, value, setValue }) {
 // ===== Main Profile Page =====
 
 const STEPS = [
-    { key: 'basics', icon: '👤', label: 'Basics' },
-    { key: 'career', icon: '🎯', label: 'Career' },
-    { key: 'technical', icon: '💻', label: 'Technical' },
-    { key: 'preparation', icon: '📊', label: 'Preparation' },
-    { key: 'assessment', icon: '🧠', label: 'Assessment' },
-    { key: 'resume', icon: '📄', label: 'Resume' },
+    { key: 'basics', label: 'Basics' },
+    { key: 'career', label: 'Career' },
+    { key: 'technical', label: 'Technical' },
+    { key: 'preparation', label: 'Preparation' },
+    { key: 'assessment', label: 'Assessment' },
+    { key: 'resume', label: 'Resume' },
 ]
 
 export default function ProfilePage() {
@@ -130,10 +129,17 @@ export default function ProfilePage() {
     // Resume
     const [uploadedFile, setUploadedFile] = useState(null)
     const [saving, setSaving] = useState(false)
+    const [hasPlan, setHasPlan] = useState(false)
 
     // --- Load Profile ---
     useEffect(() => {
         (async () => {
+            try {
+                await getLatestPlan()
+                setHasPlan(true)
+            } catch (err) {
+                // No plan exists
+            }
             try {
                 const d = await getProfile()
                 if (!d || d.id === 0) return
@@ -197,7 +203,7 @@ export default function ProfilePage() {
                 strongest_areas: strongAreas.join(', '), weakest_areas: weakAreas.join(', '),
             })
             if (uploadedFile) await uploadResume(uploadedFile)
-            toast.success('Profile saved! 🤖 AI analysis has been triggered.')
+            toast.success('Profile saved! AI analysis has been triggered.')
         } catch (err) { toast.error(err.response?.data?.detail || err.message) }
         finally { setSaving(false) }
     }
@@ -214,11 +220,11 @@ export default function ProfilePage() {
     }
 
     // ===== Section wrapper =====
-    const Section = ({ icon, iconColor, title, subtitle, children, fullWidth }) => (
+    const Section = ({ title, subtitle, children, fullWidth }) => (
         <div className={`glass-card p-8 h-full flex flex-col ${fullWidth ? 'col-span-full' : ''}`}>
-            <div className="flex items-center gap-3.5 mb-7 pb-[18px] border-b border-white/8">
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 ${iconColor}`}>{icon}</div>
-                <div><div className="text-[1.1rem] font-bold">{title}</div><div className="text-[0.8rem] text-gray-500 mt-0.5">{subtitle}</div></div>
+            <div className="mb-7 pb-[18px] border-b border-white/8">
+                <div className="text-[1.1rem] font-bold">{title}</div>
+                <div className="text-[0.8rem] text-gray-500 mt-0.5">{subtitle}</div>
             </div>
             <div className="flex-1">{children}</div>
         </div>
@@ -229,13 +235,12 @@ export default function ProfilePage() {
             {/* Navbar */}
             <nav className="sticky top-0 z-50 bg-black/92 backdrop-blur-[20px] border-b border-white/8 px-12">
                 <div className="max-w-[1400px] mx-auto flex items-center justify-between h-16">
-                    <Link to="/" className="inline-flex items-center gap-2.5 font-display text-xl font-extrabold">
-                        <span className="w-8 h-8 bg-gradient-to-br from-neon-blue via-neon-purple to-neon-pink rounded-lg flex items-center justify-center text-sm">🚀</span>
+                    <Link to="/" className="font-display text-xl font-extrabold">
                         <span className="gradient-text">Prep-Pilot</span>
                     </Link>
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white/3 border border-white/8 rounded-full text-[0.82rem] text-gray-400">
-                            <span className="w-6 h-6 bg-gradient-to-br from-neon-blue to-neon-green rounded-full flex items-center justify-center text-[0.7rem] font-bold text-white">{user?.full_name?.charAt(0) || '?'}</span>
+                            <span className="w-6 h-6 bg-neon-blue rounded-full flex items-center justify-center text-[0.7rem] font-bold text-black">{user?.full_name?.charAt(0) || '?'}</span>
                             {user?.full_name || 'User'}
                         </div>
                         <button onClick={handleLogout} className="px-5 py-2 bg-white/3 border border-white/8 rounded-xl text-sm font-semibold text-white hover:bg-white/6 transition-all">Logout</button>
@@ -256,7 +261,7 @@ export default function ProfilePage() {
                         <div className="glass-card min-w-[280px] p-6 text-center !hover:transform-none">
                             <div className="relative w-20 h-20 mx-auto mb-3">
                                 <svg className="-rotate-90" width="80" height="80" viewBox="0 0 80 80">
-                                    <defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00e5ff" /><stop offset="100%" stopColor="#bf00ff" /></linearGradient></defs>
+                                    <defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00e5ff" /><stop offset="100%" stopColor="#00e5ff" /></linearGradient></defs>
                                     <circle cx="40" cy="40" r="33" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
                                     <circle cx="40" cy="40" r="33" fill="none" stroke="url(#pg)" strokeWidth="6" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} className="transition-all duration-700" />
                                 </svg>
@@ -266,22 +271,36 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* Welcome Banner */}
-                    <div className="flex items-center gap-5 p-6 px-8 bg-neon-blue/5 border border-neon-blue/12 rounded-2xl mb-10 animate-fade-in-up delay-1">
-                        <span className="text-[2.4rem]">👋</span>
-                        <div>
-                            <h3 className="text-[1.05rem] font-bold mb-1">Welcome to Prep-Pilot!</h3>
-                            <p className="text-sm text-gray-400">The more details you provide, the more personalized your screening test, 7-day action plan, and mock interviews will be.</p>
+                    {/* Quiz CTA Banner */}
+                    {hasPlan ? (
+                        <div className="flex items-center gap-5 p-6 px-8 bg-neon-green/6 border border-neon-green/15 rounded-2xl mb-10 animate-fade-in-up delay-1 flex-wrap">
+                            <div className="flex-1 min-w-[200px]">
+                                <h3 className="text-[1.05rem] font-bold mb-1 text-neon-green">Screening Complete</h3>
+                                <p className="text-sm text-gray-400">You've already taken the screening test. Head over to your dashboard to track your 7-Day Action Plan and Mock Interviews.</p>
+                            </div>
+                            <Link to="/plan" className="inline-flex items-center gap-2 px-6 py-3 bg-neon-green text-black font-bold text-sm rounded-xl btn-glow transition-all active:scale-[0.97] shrink-0 shadow-[0_0_15px_rgba(57,255,20,0.3)]">
+                                View Action Plan
+                            </Link>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="flex items-center gap-5 p-6 px-8 bg-neon-blue/6 border border-neon-blue/15 rounded-2xl mb-10 animate-fade-in-up delay-1 flex-wrap">
+                            <div className="flex-1 min-w-[200px]">
+                                <h3 className="text-[1.05rem] font-bold mb-1">Ready to Test Your Skills?</h3>
+                                <p className="text-sm text-gray-400">Save your profile and take an AI-generated screening test tailored to your skills and target roles.</p>
+                            </div>
+                            <Link to="/quiz" className="inline-flex items-center gap-2 px-6 py-3 bg-neon-blue text-black font-bold text-sm rounded-xl btn-glow transition-all active:scale-[0.97] shrink-0">
+                                Take Screening Test
+                            </Link>
+                        </div>
+                    )}
 
                     {/* Step Indicator */}
                     <div className="flex items-center justify-center gap-2 mb-10 flex-wrap animate-fade-in-up delay-1">
                         {STEPS.map((step, i) => (
                             <div key={step.key} className="flex items-center gap-2">
                                 <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-[0.82rem] font-semibold transition-all cursor-default border ${stepComplete[step.key] ? 'bg-neon-green/10 border-neon-green/30 text-neon-green' : 'bg-white/3 border-white/8 text-gray-500'}`}>
-                                    <span className="text-base">{step.icon}</span>
                                     <span className="hidden sm:inline">{step.label}</span>
+                                    <span className="sm:hidden">{step.label.charAt(0)}</span>
                                 </div>
                                 {i < STEPS.length - 1 && <div className="w-6 h-0.5 bg-white/8 shrink-0" />}
                             </div>
@@ -292,7 +311,7 @@ export default function ProfilePage() {
                     <form onSubmit={handleSave}>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-7">
                             {/* BASICS */}
-                            <Section icon="👤" iconColor="bg-neon-blue/10" title="Personal Information" subtitle="Your basic details">
+                            <Section title="Personal Information" subtitle="Your basic details">
                                 <div className="grid grid-cols-2 gap-4 mb-4 max-sm:grid-cols-1">
                                     <div><label className="block mb-2 text-sm font-medium text-gray-400">Phone</label><input className="form-input" placeholder="+91 9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
                                     <div><label className="block mb-2 text-sm font-medium text-gray-400">Graduation Year</label><input className="form-input" type="number" placeholder="2026" value={gradYear} onChange={(e) => setGradYear(e.target.value)} /></div>
@@ -313,7 +332,7 @@ export default function ProfilePage() {
                             </Section>
 
                             {/* CAREER GOALS */}
-                            <Section icon="🎯" iconColor="bg-neon-purple/10" title="Career Goals" subtitle="Where you're headed">
+                            <Section title="Career Goals" subtitle="Where you're headed">
                                 <div className="mb-5"><label className="block mb-2 text-sm font-medium text-gray-400">Target Roles</label>
                                     <ChipSelect options={['SDE', 'Frontend', 'Backend', 'Full Stack', 'Data Science', 'DevOps', 'Mobile Dev', 'ML Engineer']} selected={targetRoles} setSelected={setTargetRoles} />
                                 </div>
@@ -331,7 +350,7 @@ export default function ProfilePage() {
                             </Section>
 
                             {/* TECHNICAL */}
-                            <Section icon="💻" iconColor="bg-neon-green/10" title="Technical Background" subtitle="Your skills & experience">
+                            <Section title="Technical Background" subtitle="Your skills & experience">
                                 <div className="mb-5"><label className="block mb-2 text-sm font-medium text-gray-400">Programming Languages</label>
                                     <TagInput tags={languages} setTags={setLanguages} placeholder="Type a language..." color="neon-purple" />
                                 </div>
@@ -339,34 +358,34 @@ export default function ProfilePage() {
                                     <TagInput tags={skills} setTags={setSkills} placeholder="Type a skill..." color="neon-blue" />
                                 </div>
                                 <div className="mb-5"><label className="block mb-2 text-sm font-medium text-gray-400">DSA Level</label>
-                                    <RadioCards options={[{ value: 'beginner', emoji: '🌱', label: 'Beginner' }, { value: 'intermediate', emoji: '🌿', label: 'Intermediate' }, { value: 'advanced', emoji: '🌳', label: 'Advanced' }, { value: 'expert', emoji: '⭐', label: 'Expert' }]} value={dsaLevel} setValue={setDsaLevel} />
+                                    <RadioCards options={[{ value: 'beginner', label: 'Beginner' }, { value: 'intermediate', label: 'Intermediate' }, { value: 'advanced', label: 'Advanced' }, { value: 'expert', label: 'Expert' }]} value={dsaLevel} setValue={setDsaLevel} />
                                 </div>
                                 <div className="mb-5"><label className="block mb-2 text-sm font-medium text-gray-400">Projects Count</label>
-                                    <RadioCards options={[{ value: '0', emoji: '📝', label: '0' }, { value: '1-3', emoji: '📦', label: '1-3' }, { value: '4-7', emoji: '🗂️', label: '4-7' }, { value: '8+', emoji: '🏗️', label: '8+' }]} value={projectsCount} setValue={setProjectsCount} />
+                                    <RadioCards options={[{ value: '0', label: '0' }, { value: '1-3', label: '1-3' }, { value: '4-7', label: '4-7' }, { value: '8+', label: '8+' }]} value={projectsCount} setValue={setProjectsCount} />
                                 </div>
                                 <div className="mb-5"><label className="block mb-2 text-sm font-medium text-gray-400">Competitive Programming</label>
-                                    <RadioCards options={[{ value: 'none', emoji: '❌', label: 'None' }, { value: 'learning', emoji: '📚', label: 'Learning' }, { value: 'active', emoji: '🔥', label: 'Active' }, { value: 'expert', emoji: '🏆', label: 'Expert' }]} value={cpLevel} setValue={setCpLevel} />
+                                    <RadioCards options={[{ value: 'none', label: 'None' }, { value: 'learning', label: 'Learning' }, { value: 'active', label: 'Active' }, { value: 'expert', label: 'Expert' }]} value={cpLevel} setValue={setCpLevel} />
                                 </div>
                                 <div><label className="block mb-2 text-sm font-medium text-gray-400">Interview Experience</label>
-                                    <RadioCards options={[{ value: 'none', emoji: '🆕', label: 'None' }, { value: '1-3', emoji: '👤', label: '1-3' }, { value: '4-10', emoji: '👥', label: '4-10' }, { value: '10+', emoji: '🎖️', label: '10+' }]} value={interviewExp} setValue={setInterviewExp} />
+                                    <RadioCards options={[{ value: 'none', label: 'None' }, { value: '1-3', label: '1-3' }, { value: '4-10', label: '4-10' }, { value: '10+', label: '10+' }]} value={interviewExp} setValue={setInterviewExp} />
                                 </div>
                             </Section>
 
                             {/* PREPARATION */}
-                            <Section icon="📊" iconColor="bg-neon-orange/10" title="Preparation Status" subtitle="Where you stand today">
+                            <Section title="Preparation Status" subtitle="Where you stand today">
                                 <div className="mb-5"><label className="block mb-2 text-sm font-medium text-gray-400">Current Stage</label>
-                                    <RadioCards options={[{ value: 'just-starting', emoji: '🚀', label: 'Just Starting' }, { value: 'learning-basics', emoji: '📖', label: 'Learning Basics' }, { value: 'building-projects', emoji: '🔨', label: 'Building Projects' }, { value: 'interview-ready', emoji: '✅', label: 'Interview Ready' }]} value={prepStage} setValue={setPrepStage} />
+                                    <RadioCards options={[{ value: 'just-starting', label: 'Just Starting' }, { value: 'learning-basics', label: 'Learning Basics' }, { value: 'building-projects', label: 'Building Projects' }, { value: 'interview-ready', label: 'Interview Ready' }]} value={prepStage} setValue={setPrepStage} />
                                 </div>
                                 <div className="mb-5"><label className="block mb-2 text-sm font-medium text-gray-400">Daily Time Available</label>
-                                    <RadioCards options={[{ value: '1-2h', emoji: '⏱️', label: '1-2 hrs' }, { value: '2-4h', emoji: '🕐', label: '2-4 hrs' }, { value: '4-6h', emoji: '🕓', label: '4-6 hrs' }, { value: '6h+', emoji: '🔥', label: '6+ hrs' }]} value={dailyTime} setValue={setDailyTime} />
+                                    <RadioCards options={[{ value: '1-2h', label: '1-2 hrs' }, { value: '2-4h', label: '2-4 hrs' }, { value: '4-6h', label: '4-6 hrs' }, { value: '6h+', label: '6+ hrs' }]} value={dailyTime} setValue={setDailyTime} />
                                 </div>
                                 <div><label className="block mb-2 text-sm font-medium text-gray-400">Resume Status</label>
-                                    <RadioCards options={[{ value: 'no-resume', emoji: '❌', label: 'No Resume' }, { value: 'basic', emoji: '📝', label: 'Basic Draft' }, { value: 'polished', emoji: '✨', label: 'Polished' }, { value: 'ats-ready', emoji: '🎯', label: 'ATS Ready' }]} value={resumeStatus} setValue={setResumeStatus} />
+                                    <RadioCards options={[{ value: 'no-resume', label: 'No Resume' }, { value: 'basic', label: 'Basic Draft' }, { value: 'polished', label: 'Polished' }, { value: 'ats-ready', label: 'ATS Ready' }]} value={resumeStatus} setValue={setResumeStatus} />
                                 </div>
                             </Section>
 
                             {/* SELF-ASSESSMENT */}
-                            <Section icon="🧠" iconColor="bg-neon-pink/10" title="Self-Assessment" subtitle="Know your strengths & gaps">
+                            <Section title="Self-Assessment" subtitle="Know your strengths & gaps">
                                 <div className="mb-5"><label className="block mb-2 text-sm font-medium text-gray-400">Strongest Areas</label>
                                     <ChipSelect options={['DSA', 'Web Dev', 'System Design', 'DBMS', 'OS', 'Networking', 'ML/AI', 'Problem Solving', 'Communication']} selected={strongAreas} setSelected={setStrongAreas} colorClass="!bg-neon-green/12 !border-neon-green/35 !text-neon-green" />
                                 </div>
@@ -379,21 +398,19 @@ export default function ProfilePage() {
                             </Section>
 
                             {/* RESUME UPLOAD */}
-                            <Section icon="📄" iconColor="bg-neon-blue/10" title="Resume Upload" subtitle="Optional — PDF, DOC, DOCX (max 5MB)">
+                            <Section title="Resume Upload" subtitle="Optional — PDF, DOC, DOCX (max 5MB)">
                                 <div className="border-2 border-dashed border-white/8 rounded-2xl p-10 text-center cursor-pointer hover:border-neon-blue hover:bg-neon-blue/4 transition-all relative">
                                     <input type="file" accept=".pdf,.doc,.docx" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFile} />
-                                    <div className="text-[2.4rem] mb-3">📤</div>
                                     <h4 className="text-base mb-1.5">Drop your resume here or click to browse</h4>
                                     <p className="text-[0.82rem] text-gray-500">PDF, DOC, DOCX — Max 5MB</p>
                                 </div>
                                 {uploadedFile && (
                                     <div className="flex items-center gap-3.5 p-4 px-5 bg-neon-green/8 border border-neon-green/20 rounded-xl mt-4">
-                                        <span className="text-2xl">{uploadedFile.type === 'application/pdf' ? '📕' : '📘'}</span>
                                         <div className="flex-1">
                                             <div className="text-sm font-semibold">{uploadedFile.name}</div>
                                             <div className="text-xs text-gray-500">{(uploadedFile.size / 1024).toFixed(1)} KB</div>
                                         </div>
-                                        <button type="button" onClick={() => setUploadedFile(null)} className="text-neon-pink hover:opacity-70 transition-opacity text-lg">🗑️</button>
+                                        <button type="button" onClick={() => setUploadedFile(null)} className="text-neon-pink hover:opacity-70 transition-opacity text-xs font-semibold uppercase tracking-wide">Remove</button>
                                     </div>
                                 )}
                             </Section>
@@ -404,9 +421,9 @@ export default function ProfilePage() {
                             <div className="max-w-[1400px] mx-auto flex items-center justify-between flex-wrap gap-3">
                                 <p className="text-sm text-gray-500">Fill out as many sections as possible for the best results</p>
                                 <div className="flex gap-4">
-                                    <button type="button" onClick={() => toast('You can complete your profile later from settings.', { icon: 'ℹ️' })} className="px-6 py-3 bg-white/3 border border-white/8 rounded-xl text-sm font-semibold text-white hover:bg-white/6 transition-all">Skip For Now</button>
-                                    <button type="submit" disabled={saving} className="px-8 py-3 bg-gradient-to-br from-neon-blue via-neon-purple to-neon-pink text-black font-bold text-sm rounded-xl btn-glow transition-all active:scale-[0.97] disabled:opacity-60 flex items-center gap-2">
-                                        {saving ? <><span className="spinner" /> Saving...</> : '💾 Save Profile'}
+                                    <button type="button" onClick={() => toast('You can complete your profile later from settings.')} className="px-6 py-3 bg-white/3 border border-white/8 rounded-xl text-sm font-semibold text-white hover:bg-white/6 transition-all">Skip For Now</button>
+                                    <button type="submit" disabled={saving} className="px-8 py-3 bg-neon-blue text-black font-bold text-sm rounded-xl btn-glow transition-all active:scale-[0.97] disabled:opacity-60 flex items-center gap-2">
+                                        {saving ? <><span className="spinner" /> Saving...</> : 'Save Profile'}
                                     </button>
                                 </div>
                             </div>

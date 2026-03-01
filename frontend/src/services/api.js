@@ -62,4 +62,41 @@ export async function uploadResume(file) {
     return data
 }
 
+// ===== Quiz =====
+export async function generateQuiz() {
+    const { data } = await api.post('/quiz/generate')
+    return data
+}
+
+// ===== Plan =====
+export async function generatePlan(quizScore = null) {
+    const { data } = await api.post('/plan/generate', { quiz_score: quizScore })
+    return data
+}
+
+export async function getLatestPlan() {
+    const { data } = await api.get('/plan/')
+    return data
+}
+
+export async function updatePlanProgress(planId, completedTasks) {
+    const { data } = await api.put(`/plan/${planId}/progress`, { completed_tasks: completedTasks })
+    return data
+}
+
+// ===== Interview =====
+export async function generateInterview() {
+    const { data } = await api.post('/interview/generate')
+    return data
+}
+
+export async function evaluateInterview(questions, answers, targetRole) {
+    const { data } = await api.post('/interview/evaluate', {
+        questions,
+        answers,
+        target_role: targetRole
+    })
+    return data
+}
+
 export default api

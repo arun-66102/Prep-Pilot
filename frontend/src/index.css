@@ -68,23 +68,18 @@ a {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
 }
 
-/* ===== Gradient Text ===== */
+/* ===== Accent Text ===== */
 .gradient-text {
-    background: linear-gradient(135deg, #00e5ff 0%, #bf00ff 50%, #ff10f0 100%);
-    background-size: 200% 200%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: gradientMove 4s ease infinite;
+    color: #00e5ff;
 }
 
 /* ===== Neon Button Glow ===== */
 .btn-glow {
-    box-shadow: 0 0 25px rgba(0, 229, 255, 0.35), 0 0 60px rgba(0, 229, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.25);
 }
 
 .btn-glow:hover {
-    box-shadow: 0 0 25px rgba(191, 0, 255, 0.35), 0 0 60px rgba(191, 0, 255, 0.1);
+    box-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
     transform: translateY(-2px);
 }
 
@@ -185,19 +180,7 @@ a {
     }
 }
 
-@keyframes gradientMove {
-    0% {
-        background-position: 0% 50%;
-    }
 
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
-}
 
 @keyframes pulse-glow {
 
@@ -245,15 +228,6 @@ a {
 
 .delay-4 {
     animation-delay: 0.4s;
-}
-
-/* ===== Background Orbs ===== */
-.bg-orb {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(100px);
-    pointer-events: none;
-    z-index: -1;
 }
 
 /* ===== Spinner ===== */
