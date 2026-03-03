@@ -21,7 +21,6 @@ async def create_interview(current_user: dict = Depends(get_current_user)):
     """Generate role-specific mock interview questions based on user profile."""
     pool = get_pool()
     
-    # 1. Fetch user profile
     async with pool.acquire() as conn:
         profile = await conn.fetchrow("SELECT target_roles, skills, interview_experience FROM profiles WHERE user_id = $1", current_user["id"])
         
@@ -31,7 +30,6 @@ async def create_interview(current_user: dict = Depends(get_current_user)):
     profile_dict = dict(profile)
     target_role = profile_dict.get("target_roles", "Software Engineer").split(",")[0] if profile_dict.get("target_roles") else "Software Engineer"
 
-    # 2. Call n8n to generate interview questions
     interview_result = await generate_interview(current_user, profile_dict)
 
     if "error" in interview_result:
@@ -40,7 +38,6 @@ async def create_interview(current_user: dict = Depends(get_current_user)):
             detail=interview_result["error"]
         )
 
-    # 3. Save questions to database (optional, for history)
     questions_json_str = json.dumps(interview_result)
     async with pool.acquire() as conn:
         interview_id = await conn.fetchval("""
@@ -84,7 +81,6 @@ async def evaluate_interview(request: InterviewEvaluateRequest, current_user: di
         n8n_data = response.json()
         if isinstance(n8n_data, list) and len(n8n_data) > 0: n8n_data = n8n_data[0]
         
-        # Parse logic similar to generation
         if isinstance(n8n_data, dict) and "choices" in n8n_data:
             content = n8n_data["choices"][0]["message"]["content"]
             return json.loads(content) if isinstance(content, str) else content

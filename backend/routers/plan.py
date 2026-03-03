@@ -17,7 +17,6 @@ async def create_plan(request: PlanGenerateRequest, current_user: dict = Depends
     """Generate a 7-day action plan based on user profile and optional quiz score."""
     pool = get_pool()
     
-    # 1. Fetch user profile
     async with pool.acquire() as conn:
         profile = await conn.fetchrow("SELECT * FROM profiles WHERE user_id = $1", current_user["id"])
         
@@ -25,11 +24,10 @@ async def create_plan(request: PlanGenerateRequest, current_user: dict = Depends
         raise HTTPException(status_code=400, detail="Profile not found. Please complete your profile first.")
         
     profile_dict = dict(profile)
-    # Remove large/unnecessary fields for LLM context to save tokens if needed
+
     if "resume_path" in profile_dict:
         del profile_dict["resume_path"]
 
-    # 2. Call n8n to generate plan
     quiz_data = {"score": request.quiz_score} if request.quiz_score is not None else {}
     plan_result = await generate_plan(current_user, profile_dict, quiz_data)
 
@@ -39,7 +37,6 @@ async def create_plan(request: PlanGenerateRequest, current_user: dict = Depends
             detail=plan_result["error"]
         )
 
-    # 3. Save to database
     plan_json_str = json.dumps(plan_result)
     async with pool.acquire() as conn:
         plan_id = await conn.fetchval("""

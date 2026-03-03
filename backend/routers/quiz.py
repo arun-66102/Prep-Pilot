@@ -14,7 +14,6 @@ async def generate_quiz_endpoint(current_user: dict = Depends(get_current_user))
     """
     pool = get_pool()
 
-    # Fetch user's profile
     async with pool.acquire() as conn:
         profile = await conn.fetchrow(
             "SELECT * FROM profiles WHERE user_id = $1",
@@ -26,7 +25,6 @@ async def generate_quiz_endpoint(current_user: dict = Depends(get_current_user))
 
     profile_dict = dict(profile)
 
-    # Check if minimum fields are filled
     if not profile_dict.get("skills") and not profile_dict.get("programming_languages"):
         return {"error": "Please add your skills and programming languages in your profile first."}
 
@@ -36,7 +34,6 @@ async def generate_quiz_endpoint(current_user: dict = Depends(get_current_user))
         "email": current_user.get("email", ""),
     }
 
-    # Call n8n and wait for quiz response
     quiz_data = await generate_quiz(user_data, profile_dict)
 
     return quiz_data

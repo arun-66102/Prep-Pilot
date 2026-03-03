@@ -8,7 +8,6 @@ from utils.n8n import trigger_n8n_background
 
 router = APIRouter()
 
-# Ensure uploads directory exists
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads", "resumes")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -105,7 +104,6 @@ async def update_profile(
                 profile_data.strongest_areas, profile_data.weakest_areas
             )
 
-    # Fire n8n webhook in the background (non-blocking)
     profile_dict = dict(profile)
     trigger_n8n_background(
         user_data={
@@ -125,7 +123,6 @@ async def upload_resume(
     current_user: dict = Depends(get_current_user)
 ):
     """Upload a resume file (PDF, DOC, DOCX). Max 5MB."""
-    # Validate file type
     allowed_types = [
         "application/pdf",
         "application/msword",
@@ -134,12 +131,10 @@ async def upload_resume(
     if file.content_type not in allowed_types:
         return {"error": "Only PDF, DOC, DOCX files are allowed"}
 
-    # Read and validate size
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:
         return {"error": "File size must be under 5MB"}
 
-    # Save file with unique name
     ext = os.path.splitext(file.filename)[1]
     unique_name = f"resume_{current_user['id']}_{uuid.uuid4().hex[:8]}{ext}"
     filepath = os.path.join(UPLOAD_DIR, unique_name)
@@ -147,7 +142,6 @@ async def upload_resume(
     with open(filepath, "wb") as f:
         f.write(content)
 
-    # Update database with resume info
     pool = get_pool()
     async with pool.acquire() as conn:
         await conn.execute(

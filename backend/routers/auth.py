@@ -12,7 +12,6 @@ async def register(user_data: UserRegister):
     pool = get_pool()
 
     async with pool.acquire() as conn:
-        # Check if email already exists
         existing = await conn.fetchrow(
             "SELECT id FROM users WHERE email = $1",
             user_data.email.lower()
@@ -24,7 +23,6 @@ async def register(user_data: UserRegister):
                 detail="An account with this email already exists"
             )
 
-        # Hash password and create user
         hashed = hash_password(user_data.password)
 
         user = await conn.fetchrow(
@@ -38,7 +36,6 @@ async def register(user_data: UserRegister):
             hashed
         )
 
-    # Create JWT token
     access_token = create_access_token({"user_id": user["id"], "email": user["email"]})
 
     return TokenResponse(
@@ -75,7 +72,6 @@ async def login(credentials: UserLogin):
             detail="Invalid email or password"
         )
 
-    # Create JWT token
     access_token = create_access_token({"user_id": user["id"], "email": user["email"]})
 
     return TokenResponse(
