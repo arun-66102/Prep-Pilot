@@ -3,7 +3,6 @@ from typing import Optional
 from datetime import datetime
 
 
-# ===== Auth Models =====
 
 class UserRegister(BaseModel):
     full_name: str
@@ -29,10 +28,8 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 
-# ===== Profile Models =====
-
 class ProfileUpdate(BaseModel):
-    # Basics
+  
     college: Optional[str] = None
     degree: Optional[str] = None
     branch: Optional[str] = None
@@ -43,28 +40,26 @@ class ProfileUpdate(BaseModel):
     bio: Optional[str] = None
     profile_picture_url: Optional[str] = None
 
-    # Career Goals
+ 
     target_roles: Optional[str] = None
     job_type: Optional[str] = None
     company_type: Optional[str] = None
     target_timeline: Optional[str] = None
 
-    # Technical Background
+    
     programming_languages: Optional[str] = None
     skills: Optional[str] = None
     dsa_level: Optional[str] = None
     projects_count: Optional[str] = None
     cp_level: Optional[str] = None
 
-    # Experience
     interview_experience: Optional[str] = None
 
-    # Preparation Status
     prep_stage: Optional[str] = None
     daily_time_available: Optional[str] = None
     resume_status: Optional[str] = None
 
-    # Self-Assessment
+
     strongest_areas: Optional[str] = None
     weakest_areas: Optional[str] = None
 
@@ -73,7 +68,7 @@ class ProfileResponse(BaseModel):
     id: int
     user_id: int
 
-    # Basics
+
     college: Optional[str] = None
     degree: Optional[str] = None
     branch: Optional[str] = None
@@ -84,32 +79,32 @@ class ProfileResponse(BaseModel):
     bio: Optional[str] = None
     profile_picture_url: Optional[str] = None
 
-    # Career Goals
+
     target_roles: Optional[str] = None
     job_type: Optional[str] = None
     company_type: Optional[str] = None
     target_timeline: Optional[str] = None
 
-    # Technical Background
+
     programming_languages: Optional[str] = None
     skills: Optional[str] = None
     dsa_level: Optional[str] = None
     projects_count: Optional[str] = None
     cp_level: Optional[str] = None
 
-    # Experience
+ 
     interview_experience: Optional[str] = None
 
-    # Preparation Status
+
     prep_stage: Optional[str] = None
     daily_time_available: Optional[str] = None
     resume_status: Optional[str] = None
 
-    # Self-Assessment
+ 
     strongest_areas: Optional[str] = None
     weakest_areas: Optional[str] = None
 
-    # Resume
+
     resume_filename: Optional[str] = None
 
     created_at: Optional[datetime] = None

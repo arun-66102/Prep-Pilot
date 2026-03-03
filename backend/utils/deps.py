@@ -3,7 +3,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from utils.security import decode_access_token
 from database import get_pool
 
-# Bearer token scheme
 security = HTTPBearer()
 
 

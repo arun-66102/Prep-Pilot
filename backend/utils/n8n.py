@@ -86,19 +86,16 @@ async def generate_quiz(user_data: dict, profile_data: dict) -> dict:
             print(f"❌ n8n returned status {response.status_code}: {response.text[:500]}")
             return {"error": f"n8n returned status {response.status_code}", "detail": response.text[:500]}
 
-        # Parse the n8n response
         raw_text = response.text
         print(f"📥 Raw n8n response (first 500 chars): {raw_text[:500]}")
         n8n_data = response.json()
 
-        # n8n may wrap the output in a list
         if isinstance(n8n_data, list) and len(n8n_data) > 0:
             print(f"📦 n8n returned a list with {len(n8n_data)} element(s), unwrapping first item")
             n8n_data = n8n_data[0]
 
         print(f"🔑 Top-level keys: {list(n8n_data.keys()) if isinstance(n8n_data, dict) else type(n8n_data).__name__}")
 
-        # --- Strategy 1: Raw Groq chat-completion response (choices → message → content) ---
         if isinstance(n8n_data, dict) and "choices" in n8n_data:
             print("🎯 Detected raw Groq response with 'choices' key")
             content = n8n_data["choices"][0]["message"]["content"]
@@ -106,7 +103,6 @@ async def generate_quiz(user_data: dict, profile_data: dict) -> dict:
             print(f"✅ Parsed quiz from choices → {len(quiz.get('questions', []))} questions")
             return quiz
 
-        # --- Strategy 2: n8n wraps Groq response inside a "body" key ---
         if isinstance(n8n_data, dict) and "body" in n8n_data:
             body = n8n_data["body"]
             if isinstance(body, str):
@@ -118,12 +114,10 @@ async def generate_quiz(user_data: dict, profile_data: dict) -> dict:
                 print(f"✅ Parsed quiz from body.choices → {len(quiz.get('questions', []))} questions")
                 return quiz
 
-        # --- Strategy 3: n8n already extracted quiz JSON ---
         if isinstance(n8n_data, dict) and "questions" in n8n_data:
             print(f"✅ Response already contains 'questions' key → {len(n8n_data['questions'])} questions")
             return n8n_data
 
-        # --- Strategy 4: n8n returned an "output" key with quiz JSON string ---
         if isinstance(n8n_data, dict) and "output" in n8n_data:
             output = n8n_data["output"]
             print(f"🔍 Found 'output' key, type: {type(output).__name__}")
@@ -135,7 +129,6 @@ async def generate_quiz(user_data: dict, profile_data: dict) -> dict:
                 print(f"✅ Parsed quiz from 'output' → {len(quiz['questions'])} questions")
                 return quiz
 
-        # --- Strategy 5: Search for any nested key that contains "questions" ---
         def _find_questions(obj, depth=0):
             if depth > 5:
                 return None
@@ -164,7 +157,6 @@ async def generate_quiz(user_data: dict, profile_data: dict) -> dict:
             print(f"✅ Found quiz via deep search → {len(found['questions'])} questions")
             return found
 
-        # Fallback — return whatever we got with a warning
         print(f"⚠️  Could not extract quiz questions. Returning raw data: {str(n8n_data)[:300]}")
         return n8n_data
 
@@ -212,7 +204,6 @@ async def generate_plan(user_data: dict, profile_data: dict, quiz_score: dict = 
         n8n_data = response.json()
         if isinstance(n8n_data, list) and len(n8n_data) > 0: n8n_data = n8n_data[0]
 
-        # Strategies for parsing Groq JSON response
         if isinstance(n8n_data, dict) and "choices" in n8n_data:
             content = n8n_data["choices"][0]["message"]["content"]
             n8n_data = json.loads(content) if isinstance(content, str) else content
@@ -224,24 +215,22 @@ async def generate_plan(user_data: dict, profile_data: dict, quiz_score: dict = 
                 content = body["choices"][0]["message"]["content"]
                 n8n_data = json.loads(content) if isinstance(content, str) else content
 
-        # Normalize specific variations in LLM schemas
         data_to_parse = n8n_data
         if isinstance(n8n_data, dict) and "output" in n8n_data:
             out = n8n_data["output"]
             data_to_parse = json.loads(out) if isinstance(out, str) else out
 
         if isinstance(data_to_parse, dict):
-            # 1. Ideal format exactly as requested: {"days": [...]}
+
             if "days" in data_to_parse and isinstance(data_to_parse["days"], list):
                 return data_to_parse
                 
-            # 2. Often returned: {"7DayPlan": {"Day1": {...}, "Day2": {...}}}
             if "7DayPlan" in data_to_parse:
                 days_dict = data_to_parse["7DayPlan"]
                 normalized_days = []
                 for day_key, day_data in days_dict.items():
                     if isinstance(day_data, dict):
-                        # Helper to find keys by substring to handle LLM hallucinations (e.g., 'objective' vs 'goal', 'activities' vs 'tasks')
+                        
                         def get_fuzzy_val(keywords, default_val, source_dict=day_data):
                             for k, v in source_dict.items():
                                 kl = k.lower()
@@ -262,11 +251,9 @@ async def generate_plan(user_data: dict, profile_data: dict, quiz_score: dict = 
                         })
                 return {"days": normalized_days}
             
-            # --- Strategy 3: Search for ANY nested list that looks like days ---
             def _find_days_array(obj, depth=0):
                 if depth > 5: return None
                 if isinstance(obj, dict):
-                    # if it's a dict whose keys are "Day1", "Day 2", etc.
                     has_day_keys = any("day" in k.lower() for k in obj.keys())
                     if has_day_keys and all(isinstance(v, dict) for k, v in obj.items() if "day" in k.lower()):
                         return list(obj.values())
@@ -275,7 +262,6 @@ async def generate_plan(user_data: dict, profile_data: dict, quiz_score: dict = 
                         res = _find_days_array(v, depth + 1)
                         if res: return res
                 elif isinstance(obj, list):
-                    # Check if items in list look like a plan day (has tasks/activities/title)
                     if len(obj) > 0 and isinstance(obj[0], dict):
                         keys = str(obj[0].keys()).lower()
                         if "task" in keys or "act" in keys or "title" in keys or "day" in keys:
