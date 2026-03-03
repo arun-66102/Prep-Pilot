@@ -1,7 +1,6 @@
 import os
 import asyncpg
 
-# Global connection pool
 pool: asyncpg.Pool = None
 
 
@@ -13,7 +12,6 @@ async def init_db():
     if not database_url:
         raise ValueError("DATABASE_URL environment variable is not set")
 
-    # asyncpg needs postgresql:// not postgres://
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
 
@@ -22,11 +20,10 @@ async def init_db():
         min_size=2,
         max_size=10,
         command_timeout=60,
-        statement_cache_size=0,  # Prevents InvalidCachedStatementError on schema changes
-        max_inactive_connection_lifetime=300 # Drops connections that have been idle too long (for Neon)
+        statement_cache_size=0,  
+        max_inactive_connection_lifetime=300 
     )
 
-    # Create tables
     async with pool.acquire() as conn:
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -99,8 +96,7 @@ async def init_db():
                 created_at TIMESTAMP DEFAULT NOW()
             );
         """)
-
-        # Safely migrate existing table
+        
         try:
             await conn.execute("ALTER TABLE plans ADD COLUMN completed_tasks JSONB DEFAULT '{}'::jsonb;")
         except asyncpg.exceptions.DuplicateColumnError:
